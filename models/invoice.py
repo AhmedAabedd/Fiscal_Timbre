@@ -22,6 +22,8 @@ class SaleOrder(models.Model):
         tax = self.env.ref('timbre_fiscal.tax_timbre_fiscal')
         if not tax:
             raise UserError("Timbre Fiscal tax not found.")
+        elif not tax.active:
+            raise UserError("Timbre Fiscal is not active.\n Disable 'Use Timbre Fiscal' in 'Other Info' page, or set the 'Timbre Fiscal' to avtive in configuration.")
         return tax
     
     @api.model_create_multi
