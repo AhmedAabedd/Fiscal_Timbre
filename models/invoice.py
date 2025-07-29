@@ -4,16 +4,13 @@ from odoo.exceptions import UserError
 
 
 
-class SaleOrder(models.Model):
+class AccountMove(models.Model):
     _inherit = 'account.move'
 
     
 
     use_timbre_fiscal = fields.Boolean(string="Use Timbre Fiscal", default=True)
-    #add_when = fields.Selection([
-    #    ('create', 'Create Invoice'),
-    #    ('confirm', 'Confirm Invoice'),
-    #], sting="Add When", default="create", required=1)
+
 
 
 
@@ -23,7 +20,7 @@ class SaleOrder(models.Model):
         if not tax:
             raise UserError("Timbre Fiscal tax not found.")
         elif not tax.active:
-            raise UserError("Timbre Fiscal is not active.\n Disable 'Use Timbre Fiscal' in 'Other Info' page, or set the 'Timbre Fiscal' to avtive in configuration.")
+            raise UserError("Timbre Fiscal is not active.\n Disable 'Use Timbre Fiscal' in 'Other Info' page, or set the 'Timbre Fiscal' to active in the configuration.")
         return tax
     
     @api.model_create_multi
@@ -39,7 +36,15 @@ class SaleOrder(models.Model):
                 if timbre_fiscal and not existing:
 
                     max_sequence = max(rec.invoice_line_ids.mapped('sequence') or [0])
+                    rec.write({
+                        'invoice_line_ids': [(0, 0, {
+                            'display_type': 'line_section',
+                            'name': "Tax On Invoice",
+                            'sequence': max_sequence + 1,
+                        })]
+                    })
 
+                    max_sequence = max(rec.invoice_line_ids.mapped('sequence') or [0])
                     rec.write({
                         'invoice_line_ids': [(0, 0, {
                             'name': timbre_fiscal.name,
